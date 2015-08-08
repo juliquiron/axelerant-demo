@@ -1,0 +1,86 @@
+<?php
+
+/**
+ * @file
+ * This module is a demo module for Axelerant
+ * Julià Mestieri Ferrer
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function axelerant_menu() {
+  $items['page_json/%/%'] = array(
+    'page callback' => '_axelerant_page_json',
+    'page arguments' => array(1, 2),
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function axelerant_form_system_site_information_settings_alter(&$form, &$form_state, $form_id) {
+  // Wrapper for custom configurations.
+  $form['axelerant_wrapper'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'Custom Axelerant coonfiguration',
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+  // Site API Key value.
+  $form['axelerant_wrapper']['siteapikey'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Site API Key',
+    '#description' => 'Use this field to set the whole site API Key',
+    // Show empty message for never set value and for empty string manualy
+    // seted.
+    '#default_value' => variable_get('siteapikey', '') != '' ? variable_get('siteapikey', '') : t('No API Key yet'),
+  );
+  // New text for submit button.
+  $form['actions']['submit']['#value'] = 'Update Configuration';
+  // Validate function.
+  $form['#validate'][] = 'axelerant_form_system_site_information_settings_validate';
+}
+
+/**
+ * Auxiliar function for validate the form.
+ */
+function axelerant_form_system_site_information_settings_validate($form, &$form_state) {
+  $new_siteapikey = $form_state['values']['siteapikey'];
+  if ($new_siteapikey == '') {
+    drupal_set_message(t("Site API Key has been removed"), 'status');
+  }
+  else {
+    drupal_set_message(t("New Site API Key: @siteapikey", array('@siteapikey' => $new_siteapikey)), 'status');
+    // Not needed to clear route cache, is checked in every petition with
+    // generic willcard.
+  }
+}
+
+/**
+ * Auxiliar function for json response.
+ */
+function _axelerant_page_json($siteapikey, $nid) {
+  $node = node_load($nid);
+  // Discard malformed URL construction.
+  if ($siteapikey == variable_get('siteapikey', '') &&
+      $siteapikey != '' &&
+      !empty($nid) &&
+      $node != FALSE &&
+      $node->type == 'page') {
+    drupal_json_output($node);
+    drupal_exit();
+  }
+  else {
+    drupal_access_denied();
+  }
+}
+
+
+/**
+ * Resources used: api.drupal.org and previous knowledge
+ * time: 1h30min
+ */

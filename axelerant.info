@@ -1,0 +1,6 @@
+name = Axelerant
+description = Axelerant demo module for c25 DEV Drupal 
+package = Custom
+core = 7.x
+version = 7.x-1.0-rc1
+
